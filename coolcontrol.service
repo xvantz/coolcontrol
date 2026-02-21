@@ -1,0 +1,14 @@
+[Unit]
+Description=HP Victus Fan Control Daemon
+After=network.target
+
+[Service]
+Type=simple
+# Ensure EC write support is enabled before starting
+ExecStartPre=/usr/sbin/modprobe ec_sys write_support=1
+ExecStart=/usr/local/bin/coolcontrol daemon --config /etc/coolcontrol.json
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

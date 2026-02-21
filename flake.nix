@@ -12,32 +12,38 @@
       pkgsFor = system: nixpkgs.legacyPackages.${system};
     in
     {
-      packages = forAllSystems (system: {
-        default = pkgsFor system.stdenv.mkDerivation {
-          pname = "coolcontrol";
-          version = "0.1.0";
-          src = ./.;
+      packages = forAllSystems (system:
+        let
+          pkgs = pkgsFor system;
+        in
+        {
+          default = pkgs.stdenv.mkDerivation {
+            pname = "coolcontrol";
+            version = "0.1.0";
+            src = ./.;
 
-          nativeBuildInputs = [ (pkgsFor system).zig.hook ];
+            nativeBuildInputs = [ pkgs.zig.hook ];
 
-          buildPhase = ''
-            export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
-            zig build -Doptimize=ReleaseSafe --prefix $out
-          '';
-        };
-      });
+            buildPhase = ''
+              export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
+              zig build -Doptimize=ReleaseSafe --prefix $out
+            '';
+          };
+        });
 
       nixosModules.default = { config, lib, pkgs, ... }:
         with lib;
         let
           cfg = config.services.coolcontrol;
+          # Use hostPlatform for newer Nixpkgs compatibility
+          system = pkgs.stdenv.hostPlatform.system;
         in
         {
           options.services.coolcontrol = {
             enable = mkEnableOption "coolcontrol fan control daemon";
             package = mkOption {
               type = types.package;
-              default = self.packages.${pkgs.system}.default;
+              default = self.packages.${system}.default;
             };
             config = mkOption {
               type = types.attrs;

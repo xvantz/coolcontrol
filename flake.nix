@@ -2,27 +2,24 @@
   description = "HP Victus Fan Control Daemon";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    # Zig 0.16.0 lives here (verified 2026-09-23: unstable default zig = zig_0_16).
-    # nixos-25.11 only has up to 0.15.2, and our code uses 0.16 Io APIs.
-    # flake.lock pins the exact rev, so the toolchain is reproducible.
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # Default zig here is 0.16.x (verified 2026-09-23 on release-26.05:
+    # zig = zig_0_16). Our code uses 0.16 Io APIs, so 25.11 (max 0.15.2)
+    # is too old. flake.lock pins the exact rev for reproducibility.
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
   };
 
   outputs =
     {
       self,
       nixpkgs,
-      nixpkgs-unstable,
     }:
     let
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       pkgsFor = system: nixpkgs.legacyPackages.${system};
-      unstableFor = system: nixpkgs-unstable.legacyPackages.${system};
-      # Pinned toolchain: zig 0.16.x from unstable. Fail loudly on major drift
-      # instead of breaking with obscure compile errors after `nix flake update`.
-      zigFor = system: let z = (unstableFor system).zig; in assert nixpkgs.lib.hasPrefix "0.16." z.version; z;
+      # Guard: fail loudly on major drift instead of obscure compile errors
+      # after `nix flake update`.
+      zigFor = system: let z = (pkgsFor system).zig; in assert nixpkgs.lib.hasPrefix "0.16." z.version; z;
     in
     {
       packages = forAllSystems (system:

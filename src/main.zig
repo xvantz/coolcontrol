@@ -3,11 +3,10 @@ const daemon = @import("daemon.zig");
 const client = @import("client.zig");
 const common = @import("common.zig");
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const allocator = init.arena.allocator();
+    const args = try init.minimal.args.toSlice(allocator);
 
     if (args.len > 1) {
         if (std.mem.eql(u8, args[1], "daemon")) {
@@ -18,22 +17,22 @@ pub fn main() !void {
                     break;
                 }
             }
-            try checkPrivileges();
-            try daemon.start(allocator, config_path);
+            try checkPrivileges(io);
+            try daemon.start(io, allocator, config_path);
         } else {
-            client.sendCommand(allocator, args) catch |err| {
+            client.sendCommand(io, allocator, args) catch |err| {
                 if (err == error.ConnectionRefused) {
                     std.debug.print("Error: Daemon not running.\n", .{});
                 } else return err;
             };
         }
     } else {
-        try client.showInfo();
+        try client.showInfo(io);
     }
 }
 
-fn checkPrivileges() !void {
-    const file = std.fs.cwd().openFile(common.EC_PATH, .{ .mode = .read_write }) catch |err| {
+fn checkPrivileges(io: std.Io) !void {
+    var file = std.Io.Dir.openFileAbsolute(io, common.EC_PATH, .{ .mode = .read_write }) catch |err| {
         if (err == error.AccessDenied) {
             std.debug.print("Error: Access Denied. Please run with 'sudo'.\n", .{});
         } else if (err == error.FileNotFound) {
@@ -43,9 +42,9 @@ fn checkPrivileges() !void {
         }
         std.process.exit(1);
     };
-    defer file.close();
+    defer file.close(io);
     const test_val = [_]u8{0xFF};
-    _ = std.posix.pwrite(file.handle, &test_val, 0x2C) catch |err| {
+    file.writePositionalAll(io, &test_val, 0x2C) catch |err| {
         if (err == error.InvalidArgument) {
             std.debug.print(
                 \\-------------------------------------------------------

@@ -13,18 +13,18 @@ pub const FanPoint = struct {
 
 pub const Smoothing = struct {
     ema_alpha: f32 = 0.3,
-    max_step_up: u8 = 8,
-    max_step_down: u8 = 4,
+    max_step_up: u8 = 6,
+    max_step_down: u8 = 8,
     min_step: u8 = 2,
-    hysteresis_temp: f32 = 2.0,
-    hysteresis_delay_s: i64 = 5,
+    hysteresis_temp: f32 = 1.5,
+    hysteresis_delay_s: i64 = 3,
     only_downward: bool = true,
 };
 
 pub const Config = struct {
     ec_path: []const u8 = "/sys/kernel/debug/ec/ec0/io",
     temp_path: []const u8 = "/sys/class/thermal/thermal_zone0/temp",
-    fan_addresses: []const u8 = &[_]u8{ 44, 45 },
+    fan_addresses: []const u8 = &[_]u8{ 0x2C, 0x2D },
     critical_temp: f32 = 92.0,
     fan_curve: []const FanPoint = &[_]FanPoint{
         .{ .temp = 45.0, .speed = 50 },

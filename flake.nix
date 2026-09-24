@@ -75,11 +75,11 @@
                 ];
                 smoothing = {
                   ema_alpha = 0.3;
-                  max_step_up = 8;
-                  max_step_down = 4;
+                  max_step_up = 6;
+                  max_step_down = 8;
                   min_step = 2;
-                  hysteresis_temp = 2.0;
-                  hysteresis_delay_s = 5;
+                  hysteresis_temp = 1.5;
+                  hysteresis_delay_s = 3;
                   only_downward = true;
                 };
               };

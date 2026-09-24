@@ -13,11 +13,11 @@ pub const FanPoint = struct {
 
 pub const Smoothing = struct {
     ema_alpha: f32 = 0.3,
-    max_step_up: u8 = 8,
-    max_step_down: u8 = 4,
+    max_step_up: u8 = 6,
+    max_step_down: u8 = 8,
     min_step: u8 = 2,
-    hysteresis_temp: f32 = 2.0,
-    hysteresis_delay_s: i64 = 5,
+    hysteresis_temp: f32 = 1.5,
+    hysteresis_delay_s: i64 = 3,
     only_downward: bool = true,
 };
 

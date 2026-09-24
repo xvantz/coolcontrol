@@ -1,8 +1,6 @@
 # coolcontrol 🧊
 
-A lightweight fan control daemon for HP Victus laptops (EC registers `44`/`45`). Written in Zig 0.16 for maximum efficiency and safety.
-
-Primary repo: https://git.827482.xyz/xvantz/coolcontrol (GitHub is a read-only mirror).
+A lightweight fan control daemon for HP Victus laptops (EC registers `0x2C`/`0x2D`). Written in Zig 0.16 for maximum efficiency and safety.
 
 ## Features
 
@@ -47,7 +45,7 @@ The monitor log shows both values for tuning:
 Requirements: [Zig 0.16.0](https://ziglang.org/download/)
 
 ```bash
-git clone https://git.827482.xyz/xvantz/coolcontrol.git
+git clone https://github.com/xvantz/coolcontrol.git
 cd coolcontrol
 zig build -Doptimize=ReleaseSafe
 # Binary lands at zig-out/bin/coolcontrol
@@ -58,7 +56,7 @@ sudo cp zig-out/bin/coolcontrol /usr/local/bin/
 
 ```nix
 {
-  inputs.coolcontrol.url = "git+https://git.827482.xyz/xvantz/coolcontrol";
+  inputs.coolcontrol.url = "github:xvantz/coolcontrol";
 
   outputs = { self, nixpkgs, coolcontrol, ... }: {
     nixosConfigurations.your-hostname = nixpkgs.lib.nixosSystem {

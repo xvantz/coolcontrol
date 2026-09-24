@@ -1,0 +1,22 @@
+{
+    "ec_path": "/sys/kernel/debug/ec/ec0/io",
+    "temp_path": "/sys/class/thermal/thermal_zone0/temp",
+    "fan_addresses": [44, 45],
+    "critical_temp": 92.0,
+    "fan_curve": [
+        {"temp": 45.0, "speed": 50},
+        {"temp": 60.0, "speed": 90},
+        {"temp": 75.0, "speed": 160},
+        {"temp": 85.0, "speed": 210},
+        {"temp": 92.0, "speed": 254}
+    ],
+    "smoothing": {
+        "ema_alpha": 0.3,
+        "max_step_up": 8,
+        "max_step_down": 4,
+        "min_step": 2,
+        "hysteresis_temp": 2.0,
+        "hysteresis_delay_s": 5,
+        "only_downward": true
+    }
+}

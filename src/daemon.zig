@@ -43,7 +43,7 @@ fn run(allocator: std.mem.Allocator) !void {
     const io = global_io;
 
     // PID file check
-    if (std.Io.Dir.openFileAbsolute(io, common.PID_PATH, .{})) |file| {
+    if (common.openFile(io, common.PID_PATH, .{})) |file| {
         var f = file;
         defer f.close(io);
         var buf: [16]u8 = undefined;
@@ -64,7 +64,7 @@ fn run(allocator: std.mem.Allocator) !void {
     } else |_| {}
 
     {
-        var pid_file = try std.Io.Dir.createFileAbsolute(io, common.PID_PATH, .{});
+        var pid_file = try common.createFile(io, common.PID_PATH, .{});
         defer pid_file.close(io);
         var pid_buf: [16]u8 = undefined;
         const pid_str = try std.fmt.bufPrint(&pid_buf, "{d}", .{std.os.linux.getpid()});
@@ -92,7 +92,7 @@ fn cleanup() void {
     std.debug.print("\nCleaning up and exiting...\n", .{});
 
     if (global_config) |cfg| {
-        if (std.Io.Dir.openFileAbsolute(io, cfg.ec_path, .{ .mode = .read_write })) |file| {
+        if (common.openFile(io, cfg.ec_path, .{ .mode = .read_write })) |file| {
             var f = file;
             defer f.close(io);
             const off: [8]u8 = [_]u8{0xFF} ** 8;
@@ -109,7 +109,7 @@ fn cleanup() void {
 fn runLoop() !void {
     const cfg = global_config orelse return error.ConfigNotLoaded;
     const io = global_io;
-    var ec_file = try std.Io.Dir.openFileAbsolute(io, cfg.ec_path, .{ .mode = .read_write });
+    var ec_file = try common.openFile(io, cfg.ec_path, .{ .mode = .read_write });
     defer ec_file.close(io);
 
     std.Io.Dir.deleteFileAbsolute(io, common.SOCKET_PATH) catch {};

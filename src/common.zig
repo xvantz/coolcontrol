@@ -36,7 +36,7 @@ pub const Config = struct {
     smoothing: Smoothing = .{},
 
     pub fn load(io: std.Io, allocator: std.mem.Allocator, path: []const u8) !std.json.Parsed(Config) {
-        var file = try std.Io.Dir.openFileAbsolute(io, path, .{});
+        var file = try openFile(io, path, .{});
         defer file.close(io);
         const len = try file.length(io);
         const size: usize = @intCast(len);
@@ -52,7 +52,7 @@ pub const Config = struct {
 };
 
 pub fn getTemp(io: std.Io, path: []const u8) !i32 {
-    var file = try std.Io.Dir.openFileAbsolute(io, path, .{});
+    var file = try openFile(io, path, .{});
     defer file.close(io);
     var buf: [32]u8 = undefined;
     var r = file.reader(io, &.{});
@@ -63,3 +63,18 @@ pub fn getTemp(io: std.Io, path: []const u8) !i32 {
 
 pub const EC_PATH = "/sys/kernel/debug/ec/ec0/io";
 pub const TEMP_PATH = "/sys/class/thermal/thermal_zone0/temp";
+
+/// openFileAbsolute asserts on relative paths, so route everything here.
+pub fn openFile(io: std.Io, path: []const u8, options: std.Io.Dir.OpenFileOptions) std.Io.File.OpenError!std.Io.File {
+    if (std.Io.Dir.path.isAbsolute(path)) {
+        return std.Io.Dir.openFileAbsolute(io, path, options);
+    }
+    return std.Io.Dir.cwd().openFile(io, path, options);
+}
+
+pub fn createFile(io: std.Io, path: []const u8, flags: std.Io.Dir.CreateFileOptions) std.Io.File.OpenError!std.Io.File {
+    if (std.Io.Dir.path.isAbsolute(path)) {
+        return std.Io.Dir.createFileAbsolute(io, path, flags);
+    }
+    return std.Io.Dir.cwd().createFile(io, path, flags);
+}

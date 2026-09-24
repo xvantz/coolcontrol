@@ -32,7 +32,7 @@ pub fn main(init: std.process.Init) !void {
 }
 
 fn checkPrivileges(io: std.Io) !void {
-    var file = std.Io.Dir.openFileAbsolute(io, common.EC_PATH, .{ .mode = .read_write }) catch |err| {
+    var file = common.openFile(io, common.EC_PATH, .{ .mode = .read_write }) catch |err| {
         if (err == error.AccessDenied) {
             std.debug.print("Error: Access Denied. Please run with 'sudo'.\n", .{});
         } else if (err == error.FileNotFound) {

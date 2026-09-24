@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  zig:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Zig 0.16.0
+        uses: https://codeberg.org/mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Format check
+        run: zig fmt --check src/
+
+      - name: Syntax check (ast-check)
+        run: |
+          for f in src/*.zig; do
+            echo "== $f"
+            zig ast-check "$f"
+          done
+
+      - name: Build (debug)
+        run: zig build
+
+      - name: Build (release)
+        run: zig build -Doptimize=ReleaseSafe

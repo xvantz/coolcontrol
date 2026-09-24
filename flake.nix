@@ -2,19 +2,30 @@
   description = "HP Victus Fan Control Daemon";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    # Default zig here is 0.16.x (verified 2026-09-23 on release-26.05:
+    # zig = zig_0_16). Our code uses 0.16 Io APIs, so 25.11 (max 0.15.2)
+    # is too old. flake.lock pins the exact rev for reproducibility.
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+    }:
     let
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       pkgsFor = system: nixpkgs.legacyPackages.${system};
+      # Guard: fail loudly on major drift instead of obscure compile errors
+      # after `nix flake update`.
+      zigFor = system: let z = (pkgsFor system).zig; in assert nixpkgs.lib.hasPrefix "0.16." z.version; z;
     in
     {
       packages = forAllSystems (system:
         let
           pkgs = pkgsFor system;
+          zigPkg = zigFor system;
         in
         {
           default = pkgs.stdenv.mkDerivation {
@@ -22,7 +33,7 @@
             version = "0.1.0";
             src = ./.;
 
-            nativeBuildInputs = [ pkgs.zig.hook ];
+            nativeBuildInputs = [ zigPkg.hook ];
 
             buildPhase = ''
               export ZIG_GLOBAL_CACHE_DIR=$TMPDIR/zig-cache
@@ -47,17 +58,30 @@
             };
             config = mkOption {
               type = types.attrs;
+              # NOTE: source of truth for the curve is
+              # /dotfiles/modules/system/coolcontrol.nix on Victus.
+              # Keep these defaults in sync with src/common.zig.
               default = {
                 ec_path = "/sys/kernel/debug/ec/ec0/io";
                 temp_path = "/sys/class/thermal/thermal_zone0/temp";
                 fan_addresses = [ 44 45 ];
-                critical_temp = 85.0;
+                critical_temp = 92.0;
                 fan_curve = [
-                  { temp = 40.0; speed = 50; }
-                  { temp = 55.0; speed = 100; }
-                  { temp = 70.0; speed = 180; }
-                  { temp = 80.0; speed = 255; }
+                  { temp = 45.0; speed = 50; }
+                  { temp = 60.0; speed = 90; }
+                  { temp = 75.0; speed = 160; }
+                  { temp = 85.0; speed = 210; }
+                  { temp = 92.0; speed = 254; }
                 ];
+                smoothing = {
+                  ema_alpha = 0.3;
+                  max_step_up = 8;
+                  max_step_down = 4;
+                  min_step = 2;
+                  hysteresis_temp = 2.0;
+                  hysteresis_delay_s = 5;
+                  only_downward = true;
+                };
               };
               description = "Configuration for coolcontrol. See coolcontrol.json for structure.";
             };

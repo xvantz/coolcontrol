@@ -17,9 +17,10 @@
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       pkgsFor = system: nixpkgs.legacyPackages.${system};
-      # Guard: fail loudly on major drift instead of obscure compile errors
-      # after `nix flake update`.
-      zigFor = system: let z = (pkgsFor system).zig; in assert nixpkgs.lib.hasPrefix "0.16." z.version; z;
+      # Explicit versioned toolchain: our code uses 0.16 Io APIs.
+      # zig_0_16 exists on 26.05 and unstable alike; default `zig` drifts
+      # (unstable already moved it to 0.17). Assert stays as tripwire.
+      zigFor = system: let z = (pkgsFor system).zig_0_16; in assert nixpkgs.lib.hasPrefix "0.16." z.version; z;
     in
     {
       packages = forAllSystems (system:
